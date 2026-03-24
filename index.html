@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Catálogo de Treinamentos - Novo Mateus</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/gsap.min.js"></script>
+
+  <style>
+    /* --- CORES E VARIÁVEIS --- */
+    :root{
+      --novo-1: #F37021; --novo-2: #005A9C;
+      --mateus-1: #D62828; --mateus-2: #F7B733;
+      
+      --bg-start: var(--novo-1); --bg-end: var(--novo-2);
+
+      --card-bg: rgba(255,255,255,0.86);
+      --glass-blur: 16px;
+      --radius: 20px;
+      --text: #111;
+      --muted: #555;
+      --max-width: 1200px; 
+      --gap: 1.25rem;
+    }
+
+    /* --- ESTILOS GLOBAIS --- */
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+    }
+    html { font-size: 15px; box-sizing: border-box; }
+    *, *::before, *::after { box-sizing: inherit; }
+
+    body{
+      min-height:100vh; margin:0; display:flex; align-items:center; justify-content:center;
+      background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+      font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color:var(--text);
+      padding: 2rem;
+      transition: background 1s ease-in-out;
+    }
+
+    /* --- LAYOUT (Sidebar + Conteúdo) --- */
+    .layout-container {
+      display: flex;
+      width: 100%;
+      max-width: var(--max-width);
+      min-height: calc(90vh - 4rem);
+      gap: 1.5rem;
+      position: relative;
+    }
+
+    /* --- SIDEBAR --- */
+    .sidebar {
+      flex: 0 0 240px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem; 
+      background: rgba(0,0,0,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: var(--radius);
+      backdrop-filter: blur(var(--glass-blur));
+      color: white;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease-out; /* Animação de entrada/saída */
+    }
+    .sidebar-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      text-align: center;
+      position: relative; /* Para o botão de fechar */
+    }
+    .sidebar-logo {
+      max-width: 90px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.2);
+      padding: 5px;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .sidebar-title {
+      font-size: 1.3rem;
+      margin: 0;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .nav-btn {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,0.8);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      transition: background 0.2s ease, color 0.2s ease;
+      text-decoration: none; 
+    }
+    .nav-btn:hover {
+      background: rgba(255,255,255,0.1);
+      color: white;
+    }
+    .nav-btn.active {
+      background: rgba(255,255,255,0.9);
+      color: var(--novo-2);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .nav-btn.download-link {
+      font-size: 0.9rem; 
+      line-height: 1.3;
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+      margin-top: auto; 
+    }
+
+    .sidebar-footer {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.6);
+      text-align: center;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+
+    /* --- POP-UP DE LINKS --- */
+    .links-popup {
+      display: none; 
+      position: absolute;
+      top: 1.5rem;   
+      bottom: auto;
+      left: calc(240px + 1.5rem + 1rem); 
+      width: 360px; 
+      background: var(--card-bg);
+      border: 1px solid rgba(255,255,255,0.6);
+      border-radius: 12px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+      backdrop-filter: blur(var(--glass-blur));
+      z-index: 1002; 
+      padding: 0.75rem;
+      opacity: 0;
+    }
+    .links-popup.visible { display: block; }
+    .links-popup h3 {
+      margin: 0.25rem 0.5rem 0.75rem 0.5rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .link-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.6rem 0.5rem;
+      border-radius: 8px;
+    }
+    .link-item:hover { background: rgba(0,0,0,0.04); }
+    .link-item span {
+      font-weight: 600;
+      color: var(--text);
+      font-size: 0.95rem; 
+    }
+    
+    .link-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .copy-btn {
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      border: 2px solid var(--novo-2);
+      background: var(--novo-2);
+      color: white;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .copy-btn:hover { background: var(--novo-1); border-color: var(--novo-1); }
+    .copy-btn:active { transform: scale(0.95); }
+    .copy-btn.copied { background: #28a745; border-color: #28a745; }
+
+    .go-btn {
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      border: 2px solid var(--novo-2); 
+      background: transparent;
+      color: var(--novo-2); 
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .go-btn:hover {
+      background: var(--novo-2);
+      color: white;
+    }
+    .go-btn:active { transform: scale(0.95); }
+
+    /* --- POP-UP DE COMANDOS E OUTROS --- */
+    #comandosPopup, #contatoPopup, #viradaPopup, #criticoPopup {
+      width: 420px; 
+      bottom: auto; 
+      top: 1.5rem; 
+      left: calc(240px + 1.5rem + 1rem); /* Posição padrão */
+      
+      max-height: calc(90vh - 4rem); 
+      overflow-y: auto; 
+      overflow-x: hidden;
+    }
+    
+    /* Estilo específico para o popup Crítico */
+    #criticoPopup {
+      width: 500px; /* Um pouco mais largo para leitura */
+      border: 2px solid #D62828; /* Borda vermelha de alerta */
+    }
+
+    #comandosPopup h4, #contatoPopup h4, #viradaPopup h4 {
+      margin: 1.25rem 0.5rem 0.5rem 0.5rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+      padding-bottom: 5px;
+    }
+    #comandosPopup h4:first-of-type, #contatoPopup h4:first-of-type, #viradaPopup h4:first-of-type {
+      margin-top: 0.25rem;
+    }
+
+    .cmd-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.6rem 0.5rem;
+      border-radius: 8px;
+      flex-wrap: wrap; 
+    }
+    .cmd-item:not(.expandable):hover {
+       background: rgba(0,0,0,0.04);
+    }
+
+    .cmd-item strong {
+      flex-shrink: 0;
+      font-family: ui-monospace, "Courier New", monospace;
+      background: rgba(0,0,0,0.08);
+      color: var(--novo-1);
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(0,0,0,0.1);
+      word-break: break-all;
+    }
+    .cmd-item span {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* Estilos do Acordeão */
+    .cmd-item.expandable {
+      background: rgba(0,0,0,0.03);
+      border: 1px solid rgba(0,0,0,0.05);
+      margin-bottom: 0.5rem;
+      padding: 0; 
+    }
+    
+    .cmd-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      cursor: pointer;
+      padding: 0.6rem 0.8rem; 
+    }
+    .cmd-item-header span:first-child {
+      font-weight: 600;
+      color: var(--novo-2);
+    }
+    .cmd-item-header .arrow {
+      font-size: 0.8rem;
+      font-weight: 900;
+      transition: transform 0.3s ease;
+      color: var(--novo-2);
+    }
+    
+    .cmd-item-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease-out, padding 0.3s ease, margin 0.3s ease;
+      width: 100%;
+      padding: 0 0.8rem;
+      font-size: 0.95rem;
+      box-sizing: border-box;
+    }
+    .cmd-item-body p { margin: 0.5rem 0; }
+    .cmd-item-body ol { padding-left: 1.5rem; margin: 0.5rem 0; }
+    .cmd-item-body li { margin-bottom: 0.5rem; }
+    .cmd-item-body code {
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: ui-monospace, "Courier New", monospace;
+    }
+    .cmd-item-body small {
+      display: block;
+      margin-top: 0.75rem;
+      font-style: italic;
+      color: var(--muted);
+    }
+
+    .cmd-item.expanded .cmd-item-body {
+      max-height: 500px; 
+      padding: 0.5rem 0.8rem 1rem 0.8rem;
+      margin-top: -5px; 
+      border-top: 1px solid rgba(0,0,0,0.08);
+    }
+    .cmd-item.expanded .arrow {
+      transform: rotate(180deg);
+    }
+    
+    /* --- POP-UP DE CONTATOS --- */
+    .contato-item {
+      padding: 0.8rem;
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+    .contato-item:last-child {
+      border-bottom: none;
+    }
+    .contato-item strong {
+      display: block;
+      font-size: 1.1rem;
+      color: var(--novo-2);
+      margin-bottom: 0.25rem;
+    }
+    .contato-item p {
+      margin: 0;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* --- Estilos dos Pop-ups de Texto (Virada e Crítico) --- */
+    #viradaPopup .info-block, #criticoPopup .info-block {
+      font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    #viradaPopup .info-block p { margin: 0.5rem 0; color: var(--text); font-weight: 600; }
+    #viradaPopup ul { padding-left: 1.5rem; margin-top: 0.5rem; font-weight: 600; color: var(--text); }
+    #viradaPopup ul li { margin-bottom: 0.5rem; }
+
+    /* Estilos específicos para Informações Críticas */
+    .alert-box {
+      background-color: rgba(214, 40, 40, 0.1);
+      border: 1px solid #D62828;
+      border-radius: 8px;
+      padding: 1rem;
+      margin: 1rem 0;
+      color: #D62828;
+    }
+    .alert-box h4 {
+      margin: 0 0 0.5rem 0 !important;
+      color: #D62828 !important;
+      border-bottom: none !important;
+    }
+    .critic-section {
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+    .critic-section:last-child { border-bottom: none; }
+    .critic-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .critic-scenario { font-size: 0.9rem; color: var(--muted); margin-bottom: 0.5rem; font-style: italic; }
+    .critic-rule {
+      background-color: #f8d7da;
+      color: #721c24;
+      padding: 0.75rem;
+      border-radius: 6px;
+      font-weight: 700;
+      margin: 0.5rem 0;
+      border-left: 4px solid #D62828;
+    }
+
+
+    /* --- CONTEÚDO PRINCIPAL (Catálogo) --- */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .catalog-wrap {
+      width: 100%;
+      height: 100%;
+      background: var(--card-bg); 
+      border-radius: var(--radius);
+      box-shadow: 0 18px 50px rgba(0,0,0,0.18);
+      overflow: auto; 
+      border: 1px solid rgba(255,255,255,0.6);
+      padding: 1.5rem 2rem;
+    }
+    .catalog-wrap h1 {
+      font-size: 2rem;
+      margin: 0.5rem 0 0.25rem 0;
+      color: var(--text);
+    }
+    .catalog-wrap .catalog-subtitle {
+      font-size: 1.1rem;
+      color: var(--muted);
+      margin-bottom: 2rem;
+    }
+
+    /* --- GRID DE TREINAMENTOS --- */
+    .training-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1.25rem;
+    }
+    .training-card {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      text-decoration: none;
+      background: #FFFFFF; 
+      border-radius: 14px;
+      padding: 1rem;
+      border: 1px solid rgba(0,0,0,0.05); 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+      transition: all 0.25s ease;
+      min-height: 200px; 
+    }
+    .training-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      border-color: var(--novo-2);
+    }
+    .card-icon {
+      height: 120px; 
+      display: grid;
+      place-items: center;
+      font-size: 3.5rem;
+      background: #f0f2f5; 
+      border-radius: 10px;
+      color: var(--novo-2);
+      overflow: hidden; 
+    }
+    .card-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain; /* Imagem contida, não cortada */
+    }
+
+    /* --- ESTILO FALLBACK --- */
+    .card-icon.fallback {
+      background: #f0f2f5; 
+      border: 1px solid rgba(0,0,0,0.05);
+      font-size: 1.1rem; 
+      font-weight: 700;
+      color: var(--novo-2);
+      padding: 1rem;
+      text-align: center;
+      line-height: 1.4;
+      display: flex; 
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+      text-align: center;
+      min-height: 2.5em; 
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    /* --- Estilos do Menu Mobile --- */
+    /* Cabeçalho fixo no mobile */
+    .mobile-header {
+      display: none; /* Escondido no desktop */
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 60px;
+      padding: 0 1rem;
+      background: var(--card-bg);
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      z-index: 998;
+      align-items: center;
+      gap: 1rem;
+    }
+    .mobile-menu-toggle {
+      width: 44px;
+      height: 44px;
+      background: transparent;
+      border: none;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--text);
+      cursor: pointer;
+      padding: 0;
+    }
+    .mobile-header-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .mobile-header-logo .sidebar-logo { 
+      max-width: 44px;
+      padding: 4px;
+    }
+    .mobile-header-logo .sidebar-title { 
+      font-size: 1.2rem;
+      color: var(--text); 
+    }
+
+    .menu-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease-out;
+    }
+    .menu-overlay.is-open {
+      display: block;
+      opacity: 1;
+    }
+    
+    .sidebar-close-btn {
+      display: none; /* Escondido no desktop */
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      width: 36px;
+      height: 36px;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      font-size: 1.5rem;
+      font-weight: 700;
+      line-height: 1;
+      cursor: pointer;
+    }
+    
+    .popup-close-btn {
+      display: none; 
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      width: 36px;
+      height: 36px;
+      background: rgba(0,0,0,0.1);
+      border: none;
+      border-radius: 50%;
+      color: var(--muted);
+      font-size: 1.5rem;
+      font-weight: 700;
+      line-height: 1;
+      cursor: pointer;
+      z-index: 1003;
+    }
+    /* --- FIM Estilos Menu Mobile --- */
+    
+
+    /* Responsivo */
+    @media (max-width: 800px) {
+      body { padding: 0; }
+      .layout-container {
+        flex-direction: column;
+        min-height: 100vh;
+        width: 100%;
+        gap: 0;
+        padding-top: 60px; /* Espaço para o novo header */
+      }
+      
+      /* --- CSS da Sidebar para Mobile --- */
+      .sidebar {
+        position: fixed; /* Fixa na tela */
+        top: 0;
+        left: 0;
+        bottom: 0;
+        height: 100%;
+        z-index: 1001;
+        border-radius: 0;
+        transform: translateX(-100%); /* Começa escondido */
+      }
+      .sidebar.is-open {
+        transform: translateX(0); /* Mostra o menu */
+      }
+      
+      .sidebar-header { 
+        flex-direction: column; 
+        align-items: center;
+      }
+      .sidebar-nav {
+        flex-direction: column; 
+        flex: 1; 
+        min-width: auto;
+        overflow-x: hidden; 
+        padding-bottom: 0;
+      }
+      .nav-btn {
+        font-size: 1rem;
+        padding: 0.75rem 1rem;
+        flex-shrink: 1;
+        white-space: normal;
+      }
+      .nav-btn.download-link {
+        display: flex; 
+        margin-top: auto; 
+      }
+      .sidebar-footer {
+        display: block; 
+      }
+      
+      .sidebar-close-btn {
+        display: block;
+      }
+      .mobile-header {
+        display: flex;
+      }
+      
+      
+      .catalog-wrap {
+        border-radius: 0; 
+        flex: 1;
+        padding: 1.5rem;
+      }
+      .links-popup {
+        left: 1rem;
+        bottom: auto;
+        top: 70px;
+        width: calc(100% - 2rem);
+      }
+       #comandosPopup, #contatoPopup, #viradaPopup, #criticoPopup {
+        top: 70px;
+        left: 1rem;
+        width: calc(100% - 2rem);
+        max-height: calc(100vh - 80px); 
+      }
+      
+      .popup-close-btn {
+        display: block;
+      }
+      .links-popup h3 {
+        padding-right: 30px; 
+      }
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- Cabeçalho Mobile Fixo -->
+  <div class="mobile-header" id="mobileHeader">
+    <button id="menuToggle" class="mobile-menu-toggle" aria-label="Abrir menu">&#9776;</button>
+    <div class="mobile-header-logo">
+      <img src="img/logo-novo-mateus.png" alt="Novo Mateus Logo" class="sidebar-logo">
+      <h2 class="sidebar-title">Novo Mateus</h2>
+    </div>
+  </div>
+  
+  <!-- Overlay para fechar o menu -->
+  <div class="menu-overlay" id="menuOverlay"></div>
+
+  <div class="layout-container" role="application">
+    
+    <!-- 1. MENU LATERAL (Botões adicionados) -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <!-- Botão de Fechar Menu Mobile (X) -->
+        <button id="menuClose" class="sidebar-close-btn" aria-label="Fechar menu">&times;</button>
+        
+        <img src="img/logo-novo-mateus.png" alt="Novo Mateus Logo" class="sidebar-logo">
+        <h2 class="sidebar-title">Novo Mateus</h2>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="nav-btn active" aria-current="page">
+          <span>🏠</span>
+          <span>Início</span>
+        </button>
+        <button class="nav-btn" id="linksBtn" aria-haspopup="true">
+          <span>🔗</span>
+          <span>Links</span>
+        </button>
+        <button class="nav-btn" id="comandosBtn" aria-haspopup="true">
+          <span>⌨️</span>
+          <span>Comando PDV</span>
+        </button>
+        <button class="nav-btn" id="contatoBtn" aria-haspopup="true">
+          <span>📞</span>
+          <span>Contato Regional</span>
+        </button>
+        <button class="nav-btn" id="viradaBtn" aria-haspopup="true">
+          <span>🔄</span>
+          <span>Virada de Loja</span>
+        </button>
+        <!-- Botão Informações Críticas -->
+        <button class="nav-btn" id="criticoBtn" aria-haspopup="true" style="color: #D62828; font-weight: 800;">
+          <span>🚨</span>
+          <span>INFORMAÇÕES CRÍTICAS</span>
+        </button>
+      </nav>
+       <a href="https://drive.google.com/drive/folders/1pOh4G00xKVwG0NV5VXTM4krAPy9Y_XUJ" target="_blank" class="nav-btn download-link">
+          <span>📱</span>
+          <span>Download App Novo Mateus</span>
+       </a>
+      
+      <!-- Footer -->
+      <div class="sidebar-footer">
+        Desenvolvido por Leonardo Freire
+      </div>
+    </aside>
+
+    <!-- 2. CONTEÚDO PRINCIPAL (CATÁLOGO) -->
+    <main class="main-content">
+      <div class="catalog-wrap">
+        <h1>Catálogo de Treinamentos</h1>
+        <p class="catalog-subtitle">Selecione um guia passo a passo para começar.</p>
+
+        <!-- O grid com os cards -->
+        <div class="training-grid">
+
+          <!-- Item 1: Treinamento de PDV -->
+          <a href="treinamento-pdv.html" class="training-card" aria-label="Iniciar treinamento: Formatação de PDV">
+            <div class="card-icon">
+              <img src="img/pdv.png" alt="Ilustração da Formatação de PDV">
+            </div>
+            <span class="card-title">Formatação de PDV</span>
+          </a>
+
+          <!-- Item 2: Configuração de Periféricos -->
+          <a href="treinamento-perifericos.html" class="training-card" aria-label="Iniciar treinamento: Configuração de Periféricos">
+            <div class="card-icon">
+              <img src="img/perifericos.png" alt="Ilustração de periféricos">
+            </div>
+            <span class="card-title">Configuração de Periféricos</span>
+          </a>
+
+          <!-- Item 3: Configuração de Balança -->
+          <a href="treinamento-balanca.html" class="training-card" aria-label="Iniciar treinamento: Configuração de Balança">
+            <div class="card-icon">
+              <img src="img/balanca.png" alt="Ilustração de uma balança">
+            </div>
+            <span class="card-title">Configuração de Balança</span>
+          </a>
+
+          <!-- Item 4: Carga de Balança -->
+          <a href="treinamento-carga-balanca.html" class="training-card" aria-label="Iniciar treinamento: Carga de Balança e MGV">
+            <div class="card-icon">
+              <img src="img/carga.png" alt="Ilustração de Carga de Balança">
+            </div>
+            <span class="card-title">Carga de Balança e MGV</span>
+          </a>
+          
+          <!-- Item 5: Abertura de Chamado -->
+          <a href="treinamento-chamado.html" class="training-card" aria-label="Iniciar treinamento: Abertura de Chamado">
+            <div class="card-icon">
+              <img src="img/chamado.png" alt="Ilustração de Abertura de Chamado">
+            </div>
+            <span class="card-title">Abertura de Chamado</span>
+          </a>
+
+          <!-- Item 6: Auditoria - Coletor -->
+          <a href="treinamento-auditoria.html" class="training-card" aria-label="Iniciar treinamento: Auditoria - Coletor">
+            <div class="card-icon">
+              <img src="img/coletor.png" alt="Ilustração de um coletor de dados">
+            </div>
+            <span class="card-title">Auditoria - Coletor</span>
+          </a>
+          
+          <!-- Item 7: Configurar IP impressora Cartaz -->
+          <a href="treinamento-cartaz.html" class="training-card" aria-label="Iniciar treinamento: Configurar IP impressora Cartaz">
+            <div class="card-icon">
+              <img src="img/cartaz.png" alt="Ilustração de uma impressora de cartaz">
+            </div>
+            <span class="card-title">Configurar IP impressora Cartaz</span>
+          </a>
+          
+          <!-- Item 8: Ingresso de Dominio -->
+          <a href="treinamento-dominio.html" class="training-card" aria-label="Iniciar treinamento: Ingresso de Dominio">
+            <div class="card-icon">
+              <img src="img/dominio.png" alt="Ilustração de ingresso de domínio">
+            </div>
+            <span class="card-title">Ingresso de Dominio</span>
+          </a>
+          
+          <!-- Item 9: Ingresso de PC Faturamento -->
+          <a href="treinamento-faturamento.html" class="training-card" aria-label="Iniciar treinamento: Ingresso de PC Faturamento">
+            <div class="card-icon">
+              <img src="img/faturamento.png" alt="Ilustração de faturamento">
+            </div>
+            <span class="card-title">Ingresso de PC Faturamento</span>
+          </a>
+
+          <!-- Item 10: Emissão de etiqueta de Flutuação -->
+          <a href="treinamento-etiqueta.html" class="training-card" aria-label="Iniciar treinamento: Emissão de etiqueta de Flutuação">
+            <div class="card-icon">
+              <img src="img/etiqueta.png" alt="Ilustração de etiqueta de preço">
+            </div>
+            <span class="card-title">Emissão de etiqueta de Flutuação</span>
+          </a>
+
+          <!-- Item 11: Emissão de Relatório de Flutuação -->
+          <a href="treinamento-relatorio.html" class="training-card" aria-label="Iniciar treinamento: Emissão de Relatório de Flutuação">
+            <div class="card-icon">
+              <img src="img/relatorio.png" alt="Ilustração de relatório">
+            </div>
+            <span class="card-title">Emissão de Relatório de Flutuação</span>
+          </a>
+
+          <!-- Item 12: Etiqueta de Rebaixa -->
+          <a href="treinamento-rebaixa.html" class="training-card" aria-label="Iniciar treinamento: Emissão de Etiqueta de Rebaixa">
+            <div class="card-icon">
+              <img src="img/rebaixa.png" alt="Ilustração de etiqueta de rebaixa">
+            </div>
+            <span class="card-title">Etiqueta de Rebaixa</span>
+          </a>
+
+          <!-- Item 13: Impressão Folha Cartaz -->
+          <a href="treinamento-cartazista.html" class="training-card" aria-label="Iniciar treinamento: Impressão Folha Cartaz">
+            <div class="card-icon">
+              <img src="img/cartazista.png" alt="Ilustração de impressão de cartazes">
+            </div>
+            <span class="card-title">Impressão Folha Cartaz</span>
+          </a>
+
+          <!-- Item 14: Impressora Honeywell -->
+          <a href="treinamento-honeywell.html" class="training-card" aria-label="Iniciar treinamento: Impressora Honeywell">
+            <div class="card-icon">
+              <img src="img/honeywell.png" alt="Ilustração da impressora Honeywell">
+            </div>
+            <span class="card-title">Impressora Honeywell (Mata-Burro)</span>
+          </a>
+          
+          </div>
+      </div>
+    </main>
+
+    <!-- 3. POP-UP DE LINKS (Escondido) -->
+    <div class="links-popup" id="linksPopup" role="dialog" aria-labelledby="linksTitle">
+      <button class="popup-close-btn" aria-label="Fechar pop-up">&times;</button>
+      <h3 id="linksTitle">Links Rápidos</h3>
+      
+      <div class="link-item">
+        <span>Acesso Consinco</span>
+        <div class="link-actions">
+          <button class="copy-btn" data-link="https://novoatacarejo.autosky.cloud/">Copiar</button>
+          <button class="go-btn" data-link="https://novoatacarejo.autosky.cloud/">Acessar</button>
+        </div>
+      </div>
+      
+      <div class="link-item">
+        <span>Monitor PDV (Impressão)</span>
+        <div class="link-actions">
+          <button class="copy-btn" data-link="http://10.101.108.7/MonitorPDV/login">Copiar</button>
+          <button class="go-btn" data-link="http://10.101.108.7/MonitorPDV/login">Acessar</button>
+        </div>
+      </div>
+
+      <div class="link-item">
+        <span>Chamados (Helpdesk)</span>
+        <div class="link-actions">
+          <button class="copy-btn" data-link="http://help.novoatacarejo.com/">Copiar</button>
+          <button class="go-btn" data-link="http://help.novoatacarejo.com/">Acessar</button>
+        </div>
+      </div>
+      
+      <div class="link-item">
+        <span>Sistema da Loja (Dext)</span>
+        <div class="link-actions">
+          <button class="copy-btn" data-link="https://novoatacarejo.dext.com.br/login.php">Copiar</button>
+          <button class="go-btn" data-link="https://novoatacarejo.dext.com.br/login.php">Acessar</button>
+        </div>
+      </div>
+
+      <div class="link-item">
+        <span>Webmail</span>
+        <div class="link-actions">
+          <button class="copy-btn" data-link="https://webmail.novoatacarejo.com/">Copiar</button>
+          <button class="go-btn" data-link="https://webmail.novoatacarejo.com/">Acessar</button>
+        </div>
+      </div>
+
+      <!-- [NOVO] Link adicionado -->
+      <div class="link-item">
+        <span>Acesso Promotores</span>
+        <div class="link-actions">
+          <button class="copy-btn" data-link="http://acesso.novoatacarejo.com">Copiar</button>
+          <button class="go-btn" data-link="http://acesso.novoatacarejo.com">Acessar</button>
+        </div>
+      </div>
+      
+    </div>
+    
+    <!-- 4. POP-UP DE COMANDOS (Escondido) -->
+    <div class="links-popup" id="comandosPopup" role="dialog" aria-labelledby="comandosTitle">
+      <button class="popup-close-btn" aria-label="Fechar pop-up">&times;</button>
+      <h3 id="comandosTitle">Comandos PDV (Acrux)</h3>
+      
+      <h4>Comandos de Operação</h4>
+      <div class="cmd-item">
+        <strong>A</strong>
+        <span>Abrir caixa</span>
+      </div>
+      <div class="cmd-item">
+        <strong>F</strong>
+        <span>Fechar caixa</span>
+      </div>
+      <div class="cmd-item">
+        <strong>H</strong>
+        <span>Consultar Cupom</span>
+      </div>
+      <div class="cmd-item">
+        <strong>C</strong>
+        <span>Abrir chamado (frente de loja)</span>
+      </div>
+      <div class="cmd-item">
+        <strong>X</strong>
+        <span>Leitura X (Teste de Impressora)</span>
+      </div>
+
+      <h4>Comandos de Manutenção</h4>
+      
+      <div class="cmd-item">
+        <strong>Alt + F2</strong>
+        <span>Abre caixa de texto</span>
+      </div>
+      <div class="cmd-item">
+        <strong>term</strong>
+        <span>Abre terminal</span>
+      </div>
+      <div class="cmd-item">
+        <strong>ls -ln /dev/ttyS*</strong>
+        <span>Lista periféricos (portas COM)</span>
+      </div>
+      
+      <div class="cmd-item expandable">
+        <div class="cmd-item-header">
+          <span><strong>Reiniciar Aplicação</strong> (Derrubar)</span>
+          <span class="arrow">▼</span>
+        </div>
+        <div class="cmd-item-body">
+          <p>Força o fechamento e reabertura do software do PDV.</p>
+          <ol>
+            <li>Pressione <strong>Alt + F2</strong></li>
+            <li>Digite: <code>killall AcruxPDV</code></li>
+            <li>Pressione <strong>Enter</strong>.</li>
+            <li>Pressione <strong>Alt + F2</strong> novamente.</li>
+            <li>Digite: <code>acruxpdv</code></li>
+            <li>Pressione <strong>Enter</strong>.</li>
+          </ol>
+          <small>Atenção: Comandos sensíveis a maiúsculas/minúsculas.</small>
+        </div>
+      </div>
+      
+      <div class="cmd-item expandable">
+        <div class="cmd-item-header">
+          <span><strong>Configurar Layout Teclado</strong></span>
+          <span class="arrow">▼</span>
+        </div>
+        <div class="cmd-item-body">
+          <p>Ajusta o sistema ao tipo de teclado conectado.</p>
+          <ol>
+            <li>Pressione <strong>Ctrl + Alt + Shift + T</strong></li>
+            <li>Escolha a opção correspondente:
+              <ul>
+                <li><strong>Padrão A:</strong> Teclado USB</li>
+                <li><strong>Padrão B:</strong> Teclados Smark e Sweda</li>
+              </ul>
+            </li>
+            <li>Pressione <strong>F10</strong> para salvar.</li>
+          </ol>
+        </div>
+      </div>
+      
+      <div class="cmd-item expandable">
+        <div class="cmd-item-header">
+          <span><strong>Configurar Portas</strong> (Periféricos)</span>
+          <span class="arrow">▼</span>
+        </div>
+        <div class="cmd-item-body">
+          <p>Acessa o menu de configuração de portas (impressora, scanner).</p>
+          <ol>
+            <li>Pressione a tecla <strong>;</strong> (ponto e vírgula).</li>
+            <li>O menu de configuração será exibido.</li>
+          </ol>
+        </div>
+      </div>
+      
+    </div>
+    
+    <!-- 5. POP-UP DE CONTATOS (Escondido) -->
+    <div class="links-popup" id="contatoPopup" role="dialog" aria-labelledby="contatoTitle">
+      <button class="popup-close-btn" aria-label="Fechar pop-up">&times;</button>
+      <h3 id="contatoTitle">Contatos Regionais</h3>
+      
+      <div class="contato-item">
+        <strong>Sitef: Martins</strong>
+        <p>TGV Sitef: 34 3218-1788</p>
+        <p>Celular: 34 9912-7261</p>
+      </div>
+      
+      <div class="contato-item">
+        <strong>Rede</strong>
+        <p>Contato: 11 4001-4433</p>
+      </div>
+
+      <!-- Novos Contatos -->
+      <div class="contato-item">
+        <strong>Redes: Anderson</strong>
+        <p>81 9998-2361</p>
+      </div>
+      
+      <div class="contato-item">
+        <strong>Consinco Banco de Dados: Marcos Reis</strong>
+        <p>81 8968-0944</p>
+      </div>
+
+      <div class="contato-item">
+        <strong>Dext: Erick Vieira</strong>
+        <p>81 8472-5765</p>
+      </div>
+
+      <div class="contato-item">
+        <strong>MGV Balanças: Gerando Assunção</strong>
+        <p>81 7118-3445</p>
+      </div>
+
+      <div class="contato-item">
+        <strong>AD: Thiago Lima</strong>
+        <p>81 9153-5125</p>
+      </div>
+      
+    </div>
+    
+    <!-- 6. POP-UP DE VIRADA DE LOJA (Escondido) -->
+    <div class="links-popup" id="viradaPopup" role="dialog" aria-labelledby="viradaTitle">
+      <button class="popup-close-btn" aria-label="Fechar pop-up">&times;</button>
+      <h3 id="viradaTitle">Orientação Virada de Loja</h3>
+      
+      <h4>Configuração de IP</h4>
+      <div class="info-block">
+        <p>• Os PCs são todos DHCP, exceto: <strong>PC da etiquetadora, MGV e Frente de Loja.</strong></p>
+        <p>• Os ramais tbm ficam com DHCP.</p>
+        <p>• Consulta Preço: <strong>192.168.--.50</strong> (em diante)</p>
+        <p>• Impressoras Epson: <strong>192.168.--.30</strong> ao <strong>38</strong></p>
+        <p>• IP da etiquetadora: <strong>192.169.--.17</strong> (e <strong>.18</strong> se houver 2 PCs)</p>
+      </div>
+
+      <h4>Principal para a Virada</h4>
+      <ul style="padding-left: 1.5rem; margin-top: 0.5rem; font-weight: 600; color: var(--text);">
+        <li>Formatação de PDV</li>
+        <li>Configuração de balança</li>
+        <li>Configuração dos consulta preço</li>
+        <li>Configuração dos coletores</li>
+        <li>Trocar o dominio dos computadores</li>
+        <li>Setar novos IPs nas impressoras e adicionar nos desktops</li>
+      </ul>
+    </div>
+
+    <!-- [NOVO] 7. POP-UP DE INFORMAÇÕES CRÍTICAS (Escondido) -->
+    <div class="links-popup" id="criticoPopup" role="dialog" aria-labelledby="criticoTitle">
+      <button class="popup-close-btn" aria-label="Fechar pop-up">&times;</button>
+      <h3 id="criticoTitle" style="color: #D62828;">AÇÕES CRÍTICAS EM PDV</h3>
+      
+      <div style="padding: 0 0.5rem;">
+        <div class="alert-box">
+          <h4>ATENÇÃO</h4>
+          <p style="font-size: 0.9rem; margin: 0;">O seu acesso de TI é o único capaz de contornar bloqueios. <strong>O fato de você poder liberar, não significa que você deva liberar.</strong> O uso indevido resultará em ADVERTÊNCIA.</p>
+        </div>
+
+        <div class="critic-section">
+          <div class="critic-title"><span>📅</span> 1. Erro de Data e Hora</div>
+          <div class="critic-scenario">PDV informa data divergente e pede liberação.</div>
+          <p><strong>Impacto:</strong> Contamina o banco de dados com registros inconsistentes.</p>
+          <div class="critic-rule">É ESTRITAMENTE PROIBIDO liberar a abertura sem corrigir a hora.</div>
+          <p><strong>Correto:</strong> Ajustar na BIOS/Windows antes de abrir.</p>
+        </div>
+
+        <div class="critic-section">
+          <div class="critic-title"><span>🔌</span> 2. PDV Offline (Sem Rede)</div>
+          <div class="critic-scenario">PDV sem rede pede para operar em contingência.</div>
+          <p><strong>Impacto:</strong> Vendas retidas causam congestionamento e divergências fiscais ao voltar.</p>
+          <div class="critic-rule">É PROIBIDO autorizar abertura Offline por conta própria.</div>
+          <p><strong>Correto:</strong> Corrigir a rede (cabo, IP) antes de liberar.</p>
+          <p style="font-size:0.85rem; margin-top:5px;"><em>Exceção: Apenas com autorização expressa do GERENTE DE TI.</em></p>
+        </div>
+
+        <div class="info-block" style="background: #fff3cd; border-color: #ffeeba; color: #856404;">
+          <strong>Consequências:</strong> Liberação indevida = Advertência.<br>
+          Seu papel é garantir que o sistema funcione corretamente, não apenas que ele abra.
+        </div>
+      </div>
+    </div>
+    
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+    
+      // --- Script do Menu Mobile ---
+      const menuToggle = document.getElementById('menuToggle');
+      const menuClose = document.getElementById('menuClose');
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('menuOverlay');
+
+      function openMenu() {
+        if(sidebar) sidebar.classList.add('is-open');
+        if(overlay) overlay.classList.add('is-open');
+      }
+      
+      function closeMenu() {
+        if(sidebar) sidebar.classList.remove('is-open');
+        if(overlay) overlay.classList.remove('is-open');
+      }
+      
+      if(menuToggle) menuToggle.addEventListener('click', openMenu);
+      if(menuClose) menuClose.addEventListener('click', closeMenu);
+      if(overlay) overlay.addEventListener('click', closeMenu);
+      // --- FIM Script Menu Mobile ---
+
+      // --- Script dos Pop-ups ---
+      const linksBtn = document.getElementById('linksBtn');
+      const linksPopup = document.getElementById('linksPopup');
+      
+      const comandosBtn = document.getElementById('comandosBtn');
+      const comandosPopup = document.getElementById('comandosPopup');
+      
+      const contatoBtn = document.getElementById('contatoBtn');
+      const contatoPopup = document.getElementById('contatoPopup');
+
+      const viradaBtn = document.getElementById('viradaBtn');
+      const viradaPopup = document.getElementById('viradaPopup');
+
+      // [NOVO] Botão Crítico
+      const criticoBtn = document.getElementById('criticoBtn');
+      const criticoPopup = document.getElementById('criticoPopup');
+
+      // Array de todos os popups e botões
+      const allPopups = [linksPopup, comandosPopup, contatoPopup, viradaPopup, criticoPopup];
+      const allBtns = [linksBtn, comandosBtn, contatoBtn, viradaBtn, criticoBtn];
+
+      // Função para abrir um popup e fechar os outros
+      function togglePopup(popupToShow, btnToShow) {
+          
+          // [MODIFICADO] Não fecha o menu principal ao clicar
+          // closeMenu(); 
+      
+          let isVisible;
+
+          allPopups.forEach((p, index) => {
+              if (p === popupToShow) {
+                  isVisible = p.classList.toggle('visible');
+                  if(btnToShow) btnToShow.setAttribute('aria-expanded', isVisible);
+              } else {
+                  if(p) p.classList.remove('visible');
+                  if(allBtns[index]) allBtns[index].setAttribute('aria-expanded', 'false');
+              }
+          });
+
+          if (isVisible) {
+              gsap.fromTo(popupToShow, {opacity:0, y:-10}, {opacity:1, y:0, duration:0.3, ease:'power2.out'});
+          }
+      }
+
+      if(linksBtn && linksPopup) {
+        linksBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          togglePopup(linksPopup, linksBtn);
+        });
+      }
+      
+      if(comandosBtn && comandosPopup) {
+        comandosBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          togglePopup(comandosPopup, comandosBtn);
+        });
+      }
+      
+      if(contatoBtn && contatoPopup) {
+        contatoBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          togglePopup(contatoPopup, contatoBtn);
+        });
+      }
+
+      if(viradaBtn && viradaPopup) {
+        viradaBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          togglePopup(viradaPopup, viradaBtn);
+        });
+      }
+
+      // [NOVO] Listener para botão Crítico
+      if(criticoBtn && criticoPopup) {
+        criticoBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          togglePopup(criticoPopup, criticoBtn);
+        });
+      }
+
+      // Fechar ao clicar fora
+      document.addEventListener('click', (e) => {
+        const isClickInsideAnyPopup = allPopups.some(p => p && p.contains(e.target));
+        const isClickInsideAnyBtn = allBtns.some(b => b && b.contains(e.target));
+
+        if (!isClickInsideAnyPopup && !isClickInsideAnyBtn) {
+          allPopups.forEach(p => { if(p) p.classList.remove('visible'); });
+          allBtns.forEach(b => { if(b) b.setAttribute('aria-expanded', 'false'); });
+        }
+      });
+
+      // --- Script de Fechar Pop-ups Internos (Mobile) ---
+      document.querySelectorAll('.popup-close-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const popup = e.target.closest('.links-popup');
+          if (popup) {
+            popup.classList.remove('visible');
+            
+            // Também atualiza o aria-expanded do botão da sidebar
+            const btnId = popup.id.replace('Popup', 'Btn'); // ex: linksPopup -> linksBtn
+            const sidebarBtn = document.getElementById(btnId);
+            if (sidebarBtn) {
+              sidebarBtn.setAttribute('aria-expanded', 'false');
+            }
+          }
+        });
+      });
+
+      // --- Script de Copiar Link ---
+      document.querySelectorAll('.copy-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+          e.stopPropagation(); 
+          const linkToCopy = button.dataset.link;
+          
+          navigator.clipboard.writeText(linkToCopy).then(() => {
+            const originalText = button.textContent;
+            button.textContent = 'Copiado!';
+            button.classList.add('copied'); 
+            
+            setTimeout(() => {
+              button.textContent = originalText;
+              button.classList.remove('copied');
+            }, 1500);
+          }).catch(err => {
+            console.error('Falha ao copiar link: ', err);
+            button.textContent = 'Erro!';
+          });
+        });
+      });
+
+      // --- Script de Acessar Link ---
+      document.querySelectorAll('.go-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+          e.stopPropagation(); 
+          const linkToOpen = button.dataset.link;
+          if (linkToOpen) {
+            window.open(linkToOpen, '_blank'); 
+          }
+        });
+      });
+      
+      // --- Script do Acordeão de Comandos ---
+      document.querySelectorAll('.cmd-item.expandable').forEach(item => {
+        const header = item.querySelector('.cmd-item-header');
+        if(header) {
+          header.addEventListener('click', () => {
+            item.classList.toggle('expanded');
+          });
+        }
+      });
+
+
+      // --- [CORREÇÃO] Animações de Entrada (GSAP) ---
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        
+        // Verifica se é desktop para animar a sidebar
+        const isDesktop = window.matchMedia('(min-width: 801px)');
+
+        if (isDesktop.matches) {
+          // Anima a sidebar SÓ no desktop
+          gsap.from('.sidebar', {
+            duration: 0.8, x: -50, opacity: 0, 
+            ease: 'power2.out', delay: 0.2
+          });
+        }
+        
+        // Anima o card principal (em todas as telas)
+        gsap.from('.catalog-wrap', {
+          duration: 0.8, y: 50, opacity: 0, 
+          ease: 'power2.out', delay: 0.4
+        });
+      }
+    });
+  </script>
+</body>
+</html>
